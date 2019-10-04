@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module is a collection of modules glued together, to provide basic
 elliptic curve arithmetic for curves over prime and binary fields. It consists of
@@ -95,6 +96,14 @@ PRIME_FIELD = {
               0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5),
         "n": 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551,
         "h": 0x1},
+    "secp256k1": {
+        "p": 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F,
+        "a": 0,
+        "b": 7,
+        "g": (0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
+              0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8),
+        "n": 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141,
+        "h": 1},
     "secp384r1": {
         "p": 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
         "a": 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000fffffffc,
@@ -1138,6 +1147,7 @@ class Point(object):
 
 
 def get_curve(name):
+    print(name)
     if name in PRIME_FIELD:
         params = PRIME_FIELD[name]
         p = params["p"]
