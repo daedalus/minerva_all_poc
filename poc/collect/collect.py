@@ -40,7 +40,7 @@ def connect():
 	try:
 		reader = readers()[0]
 	except Exception as e:
-		print("[x] Couldn't initialize a reader: {}".format(e), file=sys.stderr)
+		print(f"[x] Couldn't initialize a reader: {e}", file=sys.stderr)
 		return None
 	connection = reader.createConnection()
 	connection.connect()
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 						 "r": hexlify(r.to_bytes(byteorder="big")),
 						 "s": hexlify(s.to_bytes(byteorder="big"))})
 		if i % 50 == 0:
-			print("[ ] Collected {} signatures.".format(i), file=sys.stderr)
+			print(f"[ ] Collected {i} signatures.", file=sys.stderr)
 	finish = lambda i: args.signatures != 0 and i >= args.signatures
 	print("[ ] Starting collection.", file=sys.stderr)
 	try:

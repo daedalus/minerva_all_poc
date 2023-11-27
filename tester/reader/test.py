@@ -22,7 +22,7 @@ def connect():
     try:
         reader = readers()[0]
     except Exception as e:
-        print("[x] Couldn't initialize a reader: {}".format(e))
+        print(f"[x] Couldn't initialize a reader: {e}")
         return None
     connection = reader.createConnection()
     connection.connect()
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     correlation = corr[0][1]
     print("[*] Correlation: {:.2f}".format(correlation))
     line = np.poly1d(np.polyfit(scatter_x, scatter_y, 1))
-    print("[*] Linear fit: {}".format(str(line)[2:]))
+    print(f"[*] Linear fit: {str(line)[2:]}")
 
     plt.suptitle("Correlation: {:.2f}".format(correlation))
     plt.scatter(scatter_x, scatter_y)

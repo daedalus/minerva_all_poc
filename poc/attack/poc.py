@@ -48,7 +48,7 @@ def connect():
     try:
         reader = readers()[0]
     except Exception as e:
-        print("[x] Couldn't initialize a reader: {}".format(e))
+        print(f"[x] Couldn't initialize a reader: {e}")
         return None
     connection = reader.createConnection()
     connection.connect()
@@ -82,7 +82,7 @@ def attack(curve, hash, data, pubkey, params):
 
     skip = params["attack"]["skip"]
     if skip != 0:
-        print("[ ] Skipping {} signatures.".format(skip))
+        print(f"[ ] Skipping {skip} signatures.")
         for _ in range(skip):
             signature_queue.get()
     thread_start = time.time()
@@ -112,7 +112,7 @@ def attack(curve, hash, data, pubkey, params):
                 len(signatures) not in threads and \
                 (not threads or max(threads.keys()) < len(signatures) - params["attack"]["step"]):
             thread_name = str(len(signatures))
-            print("[ ] Starting attack thread {}.".format(thread_name))
+            print(f"[ ] Starting attack thread {thread_name}.")
             sub_sigs = list(signatures[:params["dimension"]])
             solution = lambda skey: solution_found.set()
             solve_thread = Solver(curve, sub_sigs, pubkey, params, solution)

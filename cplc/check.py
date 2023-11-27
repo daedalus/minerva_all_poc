@@ -74,7 +74,7 @@ def connect():
     try:
         reader = readers()[0]
     except Exception as e:
-        print("[x] Couldn't initialize a reader: {}".format(e))
+        print(f"[x] Couldn't initialize a reader: {e}")
         return None
     connection = reader.createConnection()
     connection.connect()
@@ -113,17 +113,17 @@ def parse_cplc(data, atr, tested, assumed):
     release_date = data[9] << 8 | data[10]
     release_level = data[11] << 8 | data[12]
     card = Ident(ic_type, release_date, release_level, atr)
-    print("[*] Card has CPLC data: {}.".format(card))
+    print(f"[*] Card has CPLC data: {card}.")
 
     vuln = False
     for other in tested:
         if other == card:
-            print("[X] ! Card is vulnerable, matched {}!".format(other))
+            print(f"[X] ! Card is vulnerable, matched {other}!")
             vuln = True
 
     for other in assumed:
         if other == card:
-            print("[X] ! Card is probably vulnerable, matched {}!".format(other))
+            print(f"[X] ! Card is probably vulnerable, matched {other}!")
             vuln = True
 
     if not vuln:

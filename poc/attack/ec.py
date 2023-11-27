@@ -362,7 +362,7 @@ class Mod(object):
             q = (q * q)
             if n & i == i:
                 r = (q * r)
-            i = i << 1
+            i <<= 1
         return r
 
     def sqrt(self):
@@ -496,7 +496,7 @@ class FField(object):
             q = self.multiply(q, q)
             if n & i == i:
                 r = self.multiply(q, r)
-            i = i << 1
+            i <<= 1
         return r
 
     def sqrt(self, f):
@@ -525,10 +525,7 @@ class FField(object):
         A faster version requiring only O(log(degree(v)))
         could be written using binary search...
         """
-        if v:
-            return v.bit_length() - 1
-        else:
-            return 0
+        return v.bit_length() - 1 if v else 0
 
     def multiply_no_reduce(self, f, v):
         """
@@ -539,7 +536,7 @@ class FField(object):
 
         result = 0
         mask = self.unity
-        for i in range(self.n + 1):
+        for _ in range(self.n + 1):
             if mask & v:
                 result = result ^ f
             f = f << 1
@@ -554,10 +551,9 @@ class FField(object):
         """
         if b == 0:
             return a, self.unity, 0
-        else:
-            (floorADivB, aModB) = self.full_division(a, b, a_degree, b_degree)
-            (d, x, y) = self.ext_gcd(d, b, aModB, b_degree, self.find_degree(aModB))
-            return d, y, self.subtract(x, self.multiply(floorADivB, y))
+        (floorADivB, aModB) = self.full_division(a, b, a_degree, b_degree)
+        (d, x, y) = self.ext_gcd(d, b, aModB, b_degree, self.find_degree(aModB))
+        return d, y, self.subtract(x, self.multiply(floorADivB, y))
 
     def full_division(self, f, v, f_degree, v_degree):
         """
@@ -609,9 +605,9 @@ class FField(object):
 
         for i in range(f_degree, 0, -1):
             if (1 << i) & f:
-                result = result + (' x^' + repr(i))
+                result = f'{result} x^{repr(i)}'
         if 1 & f:
-            result = result + ' ' + repr(1)
+            result = f'{result} {repr(1)}'
         return result.strip().replace(' ', ' + ')
 
     def to_element(self, l):
@@ -630,7 +626,7 @@ class FField(object):
         return reduce(lambda a, b: a | b, temp)
 
     def __str__(self):
-        return "F_(2^{}): {}".format(self.n, self.polynomial(self.generator))
+        return f"F_(2^{self.n}): {self.polynomial(self.generator)}"
 
     def __repr__(self):
         return str(self)
@@ -720,9 +716,7 @@ class FElement(object):
     def __eq__(self, other):
         if not isinstance(other, FElement):
             return False
-        if self.field != other.field:
-            return False
-        return self.f == other.f
+        return False if self.field != other.field else self.f == other.f
 
 
 class Curve(object):
@@ -858,10 +852,8 @@ class CurveFp(Curve):
         if not compressed:
             return bytes((0x04,)) + int(point.x).to_bytes(byte_size, byteorder="big") + int(
                     point.y).to_bytes(byte_size, byteorder="big")
-        else:
-            yp = int(point.y) & 1
-            pc = bytes((0x02 | yp,))
-            return pc + int(point.x).to_bytes(byte_size, byteorder="big")
+        pc = bytes((0x02 | int(point.y) & 1, ))
+        return pc + int(point.x).to_bytes(byte_size, byteorder="big")
 
     def decode_point(self, byte_data):
         if byte_data[0] == 0 and len(byte_data) == 1:
@@ -869,13 +861,17 @@ class CurveFp(Curve):
         byte_size = (self.field_size() + 7) // 8
         if byte_data[0] in (0x04, 0x06):
             if len(byte_data) != 1 + byte_size * 2:
-                raise ValueError("Wrong size for point encoding, should be {}, but is {}.".format(1 + byte_size * 2, len(byte_data)))
+                raise ValueError(
+                    f"Wrong size for point encoding, should be {1 + byte_size * 2}, but is {len(byte_data)}."
+                )
             x = Mod(int.from_bytes(byte_data[1:byte_size + 1], byteorder="big"), self.field)
             y = Mod(int.from_bytes(byte_data[byte_size + 1:], byteorder="big"), self.field)
             return Point(self, x, y)
         elif byte_data[0] in (0x02, 0x03):
             if len(byte_data) != 1 + byte_size:
-                raise ValueError("Wrong size for point encoding, should be {}, but is {}.".format(1 + byte_size, len(byte_data)))
+                raise ValueError(
+                    f"Wrong size for point encoding, should be {1 + byte_size}, but is {len(byte_data)}."
+                )
             x = Mod(int.from_bytes(byte_data[1:byte_size + 1], byteorder="big"), self.field)
             rhs = x ** 3 + self.a * x + self.b
             try:
@@ -887,10 +883,12 @@ class CurveFp(Curve):
                 return Point(self, x, sqrt)
             else:
                 return Point(self, x, self.field - sqrt)
-        raise ValueError("Wrong encoding type: {}, should be one of 0x04, 0x06, 0x02, 0x03 or 0x00.".format(hex(byte_data[0])))
+        raise ValueError(
+            f"Wrong encoding type: {hex(byte_data[0])}, should be one of 0x04, 0x06, 0x02, 0x03 or 0x00."
+        )
 
     def __str__(self):
-        return "\"{}\": y^2 = x^3 + {}x + {} over {}".format(self.name, self.a, self.b, self.field)
+        return f'\"{self.name}\": y^2 = x^3 + {self.a}x + {self.b} over {self.field}'
 
 
 class CurveF2m(Curve):
@@ -962,13 +960,8 @@ class CurveF2m(Curve):
         if not compressed:
             return bytes((0x04,)) + int(point.x).to_bytes(byte_size, byteorder="big") + int(
                     point.y).to_bytes(byte_size, byteorder="big")
-        else:
-            if int(point.x) == 0:
-                yp = 0
-            else:
-                yp = int(point.y * point.x.inverse())
-            pc = bytes((0x02 | yp,))
-            return pc + int(point.x).to_bytes(byte_size, byteorder="big")
+        yp = 0 if int(point.x) == 0 else int(point.y * point.x.inverse())
+        return bytes((0x02 | yp,)) + int(point.x).to_bytes(byte_size, byteorder="big")
 
     def decode_point(self, byte_data):
         if byte_data[0] == 0 and len(byte_data) == 1:
@@ -976,13 +969,17 @@ class CurveF2m(Curve):
         byte_size = (self.field_size() + 7) // 8
         if byte_data[0] in (0x04, 0x06):
             if len(byte_data) != 1 + byte_size * 2:
-                raise ValueError("Wrong size for point encoding, should be {}, but is {}.".format(1 + byte_size * 2, len(byte_data)))
+                raise ValueError(
+                    f"Wrong size for point encoding, should be {1 + byte_size * 2}, but is {len(byte_data)}."
+                )
             x = FElement(int.from_bytes(byte_data[1:byte_size + 1], byteorder="big"), self.field)
             y = FElement(int.from_bytes(byte_data[byte_size + 1:], byteorder="big"), self.field)
             return Point(self, x, y)
         elif byte_data[0] in (0x02, 0x03):
             if len(byte_data) != 1 + byte_size:
-                raise ValueError("Wrong size for point encoding, should be {}, but is {}.".format(1 + byte_size, len(byte_data)))
+                raise ValueError(
+                    f"Wrong size for point encoding, should be {1 + byte_size}, but is {len(byte_data)}."
+                )
             if self.field.n % 2 != 1:
                 raise NotImplementedError
             x = FElement(int.from_bytes(byte_data[1:byte_size + 1], byteorder="big"), self.field)
@@ -998,11 +995,12 @@ class CurveF2m(Curve):
                     z += 1
                 y = x * z
             return Point(self, x, y)
-        raise ValueError("Wrong encoding type: {}, should be one of 0x04, 0x06, 0x02, 0x03 or 0x00.".format(hex(byte_data[0])))
+        raise ValueError(
+            f"Wrong encoding type: {hex(byte_data[0])}, should be one of 0x04, 0x06, 0x02, 0x03 or 0x00."
+        )
 
     def __str__(self):
-        return "\"{}\" => y^2 + xy = x^3 + {}x^2 + {} over {}".format(self.name, self.a, self.b,
-                                                                      self.field)
+        return f'\"{self.name}\" => y^2 + xy = x^3 + {self.a}x^2 + {self.b} over {self.field}'
 
 
 class SubGroup(object):
@@ -1017,7 +1015,7 @@ class SubGroup(object):
         return self.g == other.g and self.n == other.n and self.h == other.h
 
     def __str__(self):
-        return "Subgroup => generator {}, order: {}, cofactor: {}".format(self.g, self.n, self.h)
+        return f"Subgroup => generator {self.g}, order: {self.n}, cofactor: {self.h}"
 
     def __repr__(self):
         return str(self)
@@ -1030,9 +1028,7 @@ class Inf(object):
         self.curve = curve
 
     def __eq__(self, other):
-        if not isinstance(other, Inf):
-            return False
-        return self.curve == other.curve
+        return False if not isinstance(other, Inf) else self.curve == other.curve
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1046,8 +1042,8 @@ class Inf(object):
         if isinstance(other, Point):
             return other
         raise TypeError(
-                "Unsupported operand type(s) for +: '%s' and '%s'" % (self.__class__.__name__,
-                                                                      other.__class__.__name__))
+            f"Unsupported operand type(s) for +: '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+        )
 
     def __radd__(self, other):
         return self + other
@@ -1058,11 +1054,11 @@ class Inf(object):
         if isinstance(other, Point):
             return other
         raise TypeError(
-                "Unsupported operand type(s) for +: '%s' and '%s'" % (self.__class__.__name__,
-                                                                      other.__class__.__name__))
+            f"Unsupported operand type(s) for +: '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+        )
 
     def __str__(self):
-        return "{} on {}".format(self.__class__.__name__, self.curve)
+        return f"{self.__class__.__name__} on {self.curve}"
 
     def __repr__(self):
         return str(self)
@@ -1088,20 +1084,18 @@ class Point(object):
     def __add__(self, other):
         if isinstance(other, Inf):
             return self
-        if isinstance(other, Point):
-            if self.curve != other.curve:
-                raise ValueError("Cannot add points belonging to different curves")
-            if self == -other:
-                return Inf(self.curve)
-            elif self == other:
-                return Point(self.curve, *self.curve.dbl(self.x, self.y))
-            else:
-                return Point(self.curve, *self.curve.add(self.x, self.y, other.x, other.y))
-        else:
+        if not isinstance(other, Point):
             raise TypeError(
-                    "Unsupported operand type(s) for +: '{}' and '{}'".format(
-                            self.__class__.__name__,
-                            other.__class__.__name__))
+                f"Unsupported operand type(s) for +: '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+            )
+        if self.curve != other.curve:
+            raise ValueError("Cannot add points belonging to different curves")
+        if self == -other:
+            return Inf(self.curve)
+        elif self == other:
+            return Point(self.curve, *self.curve.dbl(self.x, self.y))
+        else:
+            return Point(self.curve, *self.curve.add(self.x, self.y, other.x, other.y))
 
     def __radd__(self, other):
         return self + other
@@ -1113,34 +1107,32 @@ class Point(object):
         return self - other
 
     def __mul__(self, other):
-        if isinstance(other, int):
-            if other % self.curve.group.n == 0:
-                return Inf(self.curve)
-            if other < 0:
-                other = -other
-                addend = -self
-            else:
-                addend = self
-            if hasattr(self.curve, "mul") and callable(getattr(self.curve, "mul")):
-                return Point(self.curve, *self.curve.mul(other, addend.x, addend.y))
-            else:
-                result = Inf(self.curve)
-                # Iterate over all bits starting by the LSB
-                for bit in reversed([int(i) for i in bin(abs(other))[2:]]):
-                    if bit == 1:
-                        result += addend
-                    addend += addend
-                return result
-        else:
+        if not isinstance(other, int):
             raise TypeError(
-                    "Unsupported operand type(s) for *: '%s' and '%s'" % (other.__class__.__name__,
-                                                                          self.__class__.__name__))
+                f"Unsupported operand type(s) for *: '{other.__class__.__name__}' and '{self.__class__.__name__}'"
+            )
+        if other % self.curve.group.n == 0:
+            return Inf(self.curve)
+        if other < 0:
+            other = -other
+            addend = -self
+        else:
+            addend = self
+        if hasattr(self.curve, "mul") and callable(getattr(self.curve, "mul")):
+            return Point(self.curve, *self.curve.mul(other, addend.x, addend.y))
+        result = Inf(self.curve)
+        # Iterate over all bits starting by the LSB
+        for bit in reversed([int(i) for i in bin(abs(other))[2:]]):
+            if bit == 1:
+                result += addend
+            addend += addend
+        return result
 
     def __rmul__(self, other):
         return self * other
 
     def __str__(self):
-        return "({}, {}) on {}".format(self.x, self.y, self.curve)
+        return f"({self.x}, {self.y}) on {self.curve}"
 
     def __repr__(self):
         return str(self)

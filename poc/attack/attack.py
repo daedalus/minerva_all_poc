@@ -100,7 +100,7 @@ class Solver(Thread):
         return [(2 ** self.bound_func(i, dim, bounds)) * signatures[i][1] for i in range(dim)] + [0]
 
     def log(self, msg):
-        print("[{}] {} [{}s]".format(self.thread_name, msg, int(time.time() - self.thread_start)))
+        print(f"[{self.thread_name}] {msg} [{int(time.time() - self.thread_start)}s]")
 
     def reduce_lattice(self, lattice, block_size):
         if block_size is None:
@@ -114,9 +114,8 @@ class Solver(Thread):
                 #for _ in range(3):
                 #    BKZ_Sieve(g6k, tracer, block_size)
                 return lattice
-            else:
-                self.log("Start BKZ-{}.".format(block_size))
-                return BKZ.reduction(lattice, BKZ.Param(block_size=block_size, strategies=BKZ.DEFAULT_STRATEGY, auto_abort=True))
+            self.log(f"Start BKZ-{block_size}.")
+            return BKZ.reduction(lattice, BKZ.Param(block_size=block_size, strategies=BKZ.DEFAULT_STRATEGY, auto_abort=True))
 
     def pruning_radius_gso(self, lattice, multiplier, n_sols=1,
                            flags=Pruning.CVP | Pruning.GRADIENT | Pruning.SINGLE):
@@ -167,16 +166,16 @@ class Solver(Thread):
             return False
         self.tried.add(guess)
         pubkey_guess = guess * self.curve.g
-        self.log("Guess: {}".format(hex(guess)))
+        self.log(f"Guess: {hex(guess)}")
         if pubkey == pubkey_guess:
             self.solution_func(guess)
-            self.log("*** FOUND PRIVATE KEY *** : {}".format(hex(guess)))
+            self.log(f"*** FOUND PRIVATE KEY *** : {hex(guess)}")
             return True
         guess = self.curve.group.n - guess
         pubkey_guess = guess * self.curve.g
         if pubkey == pubkey_guess:
             self.solution_func(guess)
-            self.log("*** FOUND PRIVATE KEY *** : {}".format(hex(guess)))
+            self.log(f"*** FOUND PRIVATE KEY *** : {hex(guess)}")
             return True
         return False
 
@@ -220,7 +219,7 @@ class Solver(Thread):
             lattice = self.build_cvp_lattice(pairs, dim, self.params["bounds"])
             target = self.build_target(pairs, dim, self.params["bounds"])
         else:
-            self.log("Bad method: {}".format(self.params["attack"]["method"]))
+            self.log(f'Bad method: {self.params["attack"]["method"]}')
             return
 
         reds = [None] + self.params["betas"]
